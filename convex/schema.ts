@@ -113,7 +113,7 @@ export default defineSchema({
     .index("by_conversation", ["conversationId"]),
 
   // -- KNOWLEDGE BASE --
-  heloDeskArticles: defineTable({
+  helpDeskArticles: defineTable({
     workspaceId: v.id("workspaces"),
     title: v.string(),
     slug: v.string(),
