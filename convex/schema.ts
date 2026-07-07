@@ -233,7 +233,7 @@ export default defineSchema({
     faqEnabled: v.boolean(),
   }).index("by_workspace", ["workspaceId"]),
 
-  // -- BILLING MIRROR (webhook-written; read-only cache for Concex gating) ---
+  // -- BILLING MIRROR (webhook-written; read-only cache for Convex gating) ---
   subscriptions: defineTable({
     workspaceId: v.id("workspaces"),
     clerkOrgId: v.string(),
