@@ -68,7 +68,7 @@ export function SiteHeader() {
               !scrolled && "text-white hover:bg-white/10 hover:text-white",
             )}
           >
-            <Link href="/">Sign in</Link>
+            <Link href="/sign-in">Sign in</Link>
           </Button>
           <Button
             asChild

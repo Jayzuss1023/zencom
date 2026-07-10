@@ -8,13 +8,25 @@
  * @module
  */
 
+import type * as lib_auth from "../lib/auth.js";
+import type * as lib_plans from "../lib/plans.js";
+import type * as lib_ratelimit from "../lib/ratelimit.js";
+import type * as onboarding from "../onboarding.js";
+import type * as workspaces from "../workspaces.js";
+
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
 } from "convex/server";
 
-declare const fullApi: ApiFromModules<{}>;
+declare const fullApi: ApiFromModules<{
+  "lib/auth": typeof lib_auth;
+  "lib/plans": typeof lib_plans;
+  "lib/ratelimit": typeof lib_ratelimit;
+  onboarding: typeof onboarding;
+  workspaces: typeof workspaces;
+}>;
 
 /**
  * A utility for referencing Convex functions in your app's public API.
@@ -42,4 +54,8 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  agent: import("@convex-dev/agent/_generated/component.js").ComponentApi<"agent">;
+  presence: import("@convex-dev/presence/_generated/component.js").ComponentApi<"presence">;
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
+};

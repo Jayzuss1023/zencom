@@ -216,14 +216,14 @@ export default defineSchema({
     workspaceId: v.id("workspaces"),
     proactiveMessage: v.object({
       enabled: v.boolean(),
-      delayedSeconds: v.number(),
+      delaySeconds: v.number(),
       text: v.string(),
     }),
     leadCapture: v.object({
       enabled: v.boolean(),
       requiredFields: v.array(
         v.union(
-          v.literal("Firstname"),
+          v.literal("firstName"),
           v.literal("lastName"),
           v.literal("email"),
           v.literal("phone"),
