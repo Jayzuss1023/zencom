@@ -59,6 +59,7 @@ export default function OnboardingPage() {
     router,
   ]);
 
+  //   Loading State: Clerk / Convex auth in hydration
   if (convexAuthLoading || !orgLoaded) {
     return (
       <OnboardingShell>
@@ -77,6 +78,70 @@ export default function OnboardingPage() {
             <Skeleton className="h-4 w-3/4" />
           </div>
         </OnboardingShellCard>
+      </OnboardingShell>
+    );
+  }
+
+  //   Active org present - Now provisioning the workspace then redirecting
+  if (hasActiveOrg) {
+    const isReady = Boolean(whoami?.hasActiveOrg);
+    return (
+      <OnboardingShell>
+        <OnboardingShellCard>
+          <div className="flex items-start gap-4">
+            <div
+              className={
+                error
+                  ? "flex size-12 shrink-0 items-center justify-center rounded-2xl bg-destructive/10 text-destructive"
+                  : "flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-brand to-brand-2 text-white shadow-[0_8px_24px_-8px_var(--brand)]"
+              }
+            >
+              {error ? (
+                <AlertCircle className="size-5" />
+              ) : (
+                <Loader2 className="size-5 animate-spin" />
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <h2 className="text-lg font-semibold tracking-tight">
+                Setting up your workspace
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {error
+                  ? "Something went wrong provisioning your workspace."
+                  : isReady
+                    ? "Almost there — preparing your dashboard."
+                    : "Waiting for your organization to become active…"}
+              </p>
+            </div>
+          </div>
+
+          {!error && (
+            <div className="mt-6 space-y-3">
+              <ProvisionStep done label="Organization created" />
+              <ProvisionStep
+                done={isReady}
+                active={!isReady}
+                label="Activating your organization"
+              />
+              <ProvisionStep
+                active={isReady}
+                label="Preparing your dashboard"
+              />
+            </div>
+          )}
+
+          {error && (
+            <div
+              className="mt-6 flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4"
+              role="alert"
+            >
+              <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" />
+              <p className="text-sm text-destructive">{error}</p>
+            </div>
+          )}
+        </OnboardingShellCard>
+        <ClaimDebugPanel whoami={whoami} />
       </OnboardingShell>
     );
   }
@@ -126,6 +191,48 @@ export default function OnboardingPage() {
       </div>
       <ClaimDebugPanel whoami={whoami} />
     </OnboardingShell>
+  );
+}
+
+// ── Provisioning step row ─────────────────────────────────────────────────────
+function ProvisionStep({
+  label,
+  done = false,
+  active = false,
+}: {
+  label: string;
+  done?: boolean;
+  active?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <span
+        className={
+          done
+            ? "flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white"
+            : active
+              ? "flex size-6 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand"
+              : "flex size-6 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground"
+        }
+      >
+        {done ? (
+          <Check className="size-3.5" />
+        ) : active ? (
+          <Loader2 className="size-3.5 animate-spin" />
+        ) : (
+          <span className="size-1.5 rounded-full bg-current" />
+        )}
+      </span>
+      <span
+        className={
+          done || active
+            ? "text-sm font-medium text-foreground"
+            : "text-sm text-muted-foreground"
+        }
+      >
+        {label}
+      </span>
+    </div>
   );
 }
 
