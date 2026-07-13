@@ -41,22 +41,6 @@ function authError(
   return new ConvexError({ code, message });
 }
 
-// // Read the custom org claims off the Clerk identity. They are not part of the
-// // base UserIdentity type, so we widen to a record and pull them by key.
-function readOrgClaims(identity: Record<string, unknown>): {
-  orgId: string | null;
-  orgRole: string | null;
-  orgSlug: string | null;
-} {
-  const orgId = typeof identity.org_id === "string" ? identity.org_id : null;
-  const orgRole =
-    typeof identity.org_rol === "string" ? identity.org_rol : null;
-  const orgSlug =
-    typeof identity.org_slg === "string" ? identity.org_slg : null;
-
-  return { orgId, orgRole, orgSlug };
-}
-
 // // Map the raw Clerk role string to our coarse app role. Clerk's default admin
 // // role is "org:admin"; everything else (incl. "org:support", custom roles) is
 // // treated as support. (Reconciled-Conflict #11.)
@@ -78,16 +62,24 @@ function readOrgClaims(identity: Record<string, unknown>): {
 //  */
 export async function requireOrgMember(ctx: QueryCtx) {
   const rawIdentity = await ctx.auth.getUserIdentity();
-  console.log(rawIdentity);
+
   if (!rawIdentity) {
     throw authError("NOT_AUTHENTICATED", "Not authenticated");
   }
 
-  const claims = readOrgClaims(
-    rawIdentity as unknown as Record<string, unknown>,
-  );
-  if (!claims) console.log("NO CLAIMS");
-  if (!claims.orgId) {
+  const claims = rawIdentity.o as unknown as Record<string, unknown>;
+  const orgId =
+    claims !== undefined && typeof claims.id === "string" ? claims.id : null;
+  const orgRole =
+    claims !== undefined && claims.rol && typeof claims.rol === "string"
+      ? claims.rol
+      : null;
+  const orgSlug =
+    claims !== undefined && claims.slg && typeof claims.slg === "string"
+      ? claims.slg
+      : null;
+
+  if (!orgId) {
     throw authError(
       "NO_ACTIVE_ORG",
       "No active organization on the session. Select or create one.",
@@ -96,7 +88,7 @@ export async function requireOrgMember(ctx: QueryCtx) {
 
   const workspace = await ctx.db
     .query("workspaces")
-    .withIndex("by_org", (q) => q.eq("clerkOrgId", claims.orgId!))
+    .withIndex("by_org", (q) => q.eq("clerkOrgId", orgId!))
     .unique();
 
   if (!workspace) {
@@ -124,18 +116,18 @@ export const getActiveWorkspace = query({
   args: {},
   returns: v.union(
     v.object({}),
-    // v.object({
-    //   ok: v.literal(true),
-    //   workspace: v.object({
-    //     _id: v.id("workspaces"),
-    //     _creationTime: v.number(),
-    //     name: v.string(),
-    //     clerkOrgId: v.optional(v.string()),
-    //     slug: v.optional(v.string()),
-    //   }),
-    //   role: v.union(v.literal("admin"), v.literal("support")),
-    //   orgId: v.string(),
-    // }),
+    v.object({
+      ok: v.literal(true),
+      //   workspace: v.object({
+      //     _id: v.id("workspaces"),
+      //     _creationTime: v.number(),
+      //     name: v.string(),
+      //     clerkOrgId: v.optional(v.string()),
+      //     slug: v.optional(v.string()),
+      //   }),
+      //   role: v.union(v.literal("admin"), v.literal("support")),
+      //   orgId: v.string(),
+    }),
     v.object({
       ok: v.literal(false),
       code: v.union(

@@ -8,6 +8,9 @@
  * @module
  */
 
+import type * as clerkWebhooks from "../clerkWebhooks.js";
+import type * as debug from "../debug.js";
+import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_plans from "../lib/plans.js";
 import type * as lib_ratelimit from "../lib/ratelimit.js";
@@ -21,6 +24,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  clerkWebhooks: typeof clerkWebhooks;
+  debug: typeof debug;
+  http: typeof http;
   "lib/auth": typeof lib_auth;
   "lib/plans": typeof lib_plans;
   "lib/ratelimit": typeof lib_ratelimit;

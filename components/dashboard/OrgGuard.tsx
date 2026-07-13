@@ -36,7 +36,7 @@ export function OrgGuard({ children }: { children: React.ReactNode }) {
     if (active.code === "NO_ACTIVE_ORG") {
       router.replace("/onboarding");
     }
-  });
+  }, [active, provisionWorkspace, router]);
 
   return <>{children}</>;
 }
