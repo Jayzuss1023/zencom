@@ -15,6 +15,7 @@ export function OrgGuard({ children }: { children: React.ReactNode }) {
   const healingRef = useRef(false);
 
   useEffect(() => {
+    // Convex Auth flow: Checked Clerk's Server for Organization and found none
     if (!active) return;
 
     if (active.ok) {
@@ -23,7 +24,6 @@ export function OrgGuard({ children }: { children: React.ReactNode }) {
     }
 
     if (active.code === "WORKSPACE_NOT_FOUND") {
-      console.log("NOWORKSPACE FOUND");
       if (healingRef.current) return;
       healingRef.current = true;
 
