@@ -149,7 +149,7 @@ export default function OnboardingPage() {
   return (
     <OnboardingShell>
       <div className="flex flex-col items-center text-center">
-        <span className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-brand-2 text-white shadow-[0_10px_30px_-8px_var(--brand)]">
+        <span className="flex size-14 items-center justify-center rounded-2xl bg-linear-to-br from-brand to-brand-2 text-white shadow-[0_10px_30px_-8px_var(--brand)]">
           <Building2 className="size-7" />
         </span>
         <Badge

@@ -5,8 +5,8 @@ export default defineSchema({
   //----- Tenant
   workspaces: defineTable({
     name: v.string(),
-    ownerClerkUserId: v.string(), // Creator convenience, NOT the auth boundary
-    clerkOrgId: v.optional(v.string()), // Clerk Org Id - REAL tenant key (enforced in code)
+    ownerClerkUserId: v.string(), // kept: creator convenience, NOT the auth boundary
+    clerkOrgId: v.optional(v.string()), // Clerk Organization id — REAL tenant key (enforced in code)
     slug: v.optional(v.string()),
   })
     .index("by_owner", ["ownerClerkUserId"])

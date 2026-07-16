@@ -15,6 +15,7 @@ import type * as lib_auth from "../lib/auth.js";
 import type * as lib_plans from "../lib/plans.js";
 import type * as lib_ratelimit from "../lib/ratelimit.js";
 import type * as onboarding from "../onboarding.js";
+import type * as widget from "../widget.js";
 import type * as workspaces from "../workspaces.js";
 
 import type {
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   "lib/plans": typeof lib_plans;
   "lib/ratelimit": typeof lib_ratelimit;
   onboarding: typeof onboarding;
+  widget: typeof widget;
   workspaces: typeof workspaces;
 }>;
 

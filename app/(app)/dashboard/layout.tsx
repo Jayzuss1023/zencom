@@ -12,6 +12,12 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  function binary(decimal: number) {
+    console.log(decimal.toString(2));
+  }
+
+  binary(56);
+
   return (
     <SidebarProvider>
       <DashboardSidebar />

@@ -1,3 +1,4 @@
+import { Doc } from "@/_generated/dataModel";
 import { query, QueryCtx } from "@/_generated/server";
 import { ConvexError, v } from "convex/values";
 
@@ -18,6 +19,19 @@ import { ConvexError, v } from "convex/values";
 // // ─────────────────────────────────────────────────────────────────────────────
 
 export type AppRole = "admin" | "support";
+
+export type OrgMemberContext = {
+  identity: {
+    subject: string;
+    orgId: string;
+    orgRole: string;
+    orgSlug: string | null;
+    name: string | null;
+    email: string | null;
+  };
+  workspace: Doc<"workspaces">;
+  role: AppRole;
+};
 
 export type AuthErrorCode =
   | "NOT_AUTHENTICATED"
@@ -51,7 +65,9 @@ export function mapRole(rawOrgRole: string | null): AppRole {
 //  * source of truth when present; otherwise we fall back to the JWT `org_role`
 //  * claim so the very first admin works before the membership webhook lands.
 //  */
-export async function requireOrgMember(ctx: QueryCtx) {
+export async function requireOrgMember(
+  ctx: QueryCtx,
+): Promise<OrgMemberContext> {
   const rawIdentity = await ctx.auth.getUserIdentity();
 
   if (!rawIdentity) {
@@ -63,13 +79,9 @@ export async function requireOrgMember(ctx: QueryCtx) {
   const orgId =
     claims !== undefined && typeof claims.id === "string" ? claims.id : null;
   const orgRole =
-    claims !== undefined && claims.rol && typeof claims.rol === "string"
-      ? claims.rol
-      : null;
+    claims !== undefined && typeof claims.rol === "string" ? claims.rol : null;
   const orgSlug =
-    claims !== undefined && claims.slg && typeof claims.slg === "string"
-      ? claims.slg
-      : null;
+    claims !== undefined && typeof claims.slg === "string" ? claims.slg : null;
 
   if (!orgId) {
     throw authError(
@@ -106,10 +118,10 @@ export async function requireOrgMember(ctx: QueryCtx) {
   return {
     identity: {
       subject: rawIdentity.subject,
-      orgId: claims.orgId,
-      orgRole: claims.orgRole ?? "",
-      orgSlug: claims.orgSlug,
-      name: (rawIdentity.email as String | undefined) ?? null,
+      orgId: orgId,
+      orgRole: orgRole ?? "",
+      orgSlug: orgSlug,
+      name: (rawIdentity.email as string | undefined) ?? null,
       email: (rawIdentity.email as string | undefined) ?? null,
     },
     workspace,
@@ -120,7 +132,6 @@ export async function requireOrgMember(ctx: QueryCtx) {
 export const getActiveWorkspace = query({
   args: {},
   returns: v.union(
-    v.object({}),
     v.object({
       ok: v.literal(true),
       workspace: v.object({
@@ -146,7 +157,7 @@ export const getActiveWorkspace = query({
     try {
       const { workspace, role, identity } = await requireOrgMember(ctx);
       return {
-        ok: true,
+        ok: true as const,
         workspace: {
           _id: workspace._id,
           _creationTime: workspace._creationTime,

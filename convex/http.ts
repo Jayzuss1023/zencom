@@ -301,81 +301,81 @@ const DEFAULT_BUBBLE = {
   notificationSound: true,
 };
 
-// const widgetConfig = httpAction(async (ctx, request) => {
-//   const url = new URL(request.url);
-//   const appId = url.searchParams.get("app_id");
+const widgetConfig = httpAction(async (ctx, request) => {
+  const url = new URL(request.url);
+  const appId = url.searchParams.get("app_id");
 
-//   if (!appId) {
-//     return new Response(JSON.stringify(DEFAULT_BUBBLE), {
-//       status: 400,
-//       headers: { "Content-Type": "application/json", ...WIDGET_CONFIG_CORS },
-//     });
-//   }
+  if (!appId) {
+    return new Response(JSON.stringify(DEFAULT_BUBBLE), {
+      status: 400,
+      headers: { "Content-Type": "application/json", ...WIDGET_CONFIG_CORS },
+    });
+  }
 
-// The Convex query validates `workspaceId` as a real id; a malformed string
-// throws an ArgumentValidationError, which we catch and treat as "unknown".
-//   let config: Awaited<ReturnType<typeof getConfigSafe>> = null;
-//   try {
-//     config = await getConfigSafe(ctx, appId);
-//   } catch {
-//     config = null;
-//   }
+  // The Convex query validates `workspaceId` as a real id; a malformed string
+  // throws an ArgumentValidationError, which we catch and treat as "unknown".
+  let config: Awaited<ReturnType<typeof getConfigSafe>> = null;
+  try {
+    config = await getConfigSafe(ctx, appId);
+  } catch {
+    config = null;
+  }
 
-//   if (!config) {
-//     return new Response(JSON.stringify(DEFAULT_BUBBLE), {
-//       status: 400,
-//       headers: { "Content-Type": "application/json", ...WIDGET_CONFIG_CORS },
-//     });
-//   }
+  if (!config) {
+    return new Response(JSON.stringify(DEFAULT_BUBBLE), {
+      status: 400,
+      headers: { "Content-Type": "application/json", ...WIDGET_CONFIG_CORS },
+    });
+  }
 
-// Project the appearance down to the bubble-only fields the loader styles.
-//   const a = config.appearance;
-//   const body = {
-//     themeColor: a.themeColor,
-//     buttonColor: a.buttonColor,
-//     cornerRadius: a.cornerRadius,
-//     title: a.title,
-//     titleColor: a.titleColor,
-//     logoUrl: a.logoUrl,
-//     position: a.position,
-//     bottomMargin: a.bottomMargin,
-//     sideMargin: a.sideMargin,
-//     notificationSound: a.notificationSound,
-//     // Paid plans (Pro/Scale) hide the "Powered by" footer; false for Free.
-//     removeBranding: config.removeBranding,
-//   };
+  // Project the appearance down to the bubble-only fields the loader styles.
+  const a = config.appearance;
+  const body = {
+    themeColor: a.themeColor,
+    buttonColor: a.buttonColor,
+    cornerRadius: a.cornerRadius,
+    title: a.title,
+    titleColor: a.titleColor,
+    logoUrl: a.logoUrl,
+    position: a.position,
+    bottomMargin: a.bottomMargin,
+    sideMargin: a.sideMargin,
+    notificationSound: a.notificationSound,
+    // Paid plans (Pro/Scale) hide the "Powered by" footer; false for Free.
+    removeBranding: config.removeBranding,
+  };
 
-//   return new Response(JSON.stringify(body), {
-//     status: 200,
-//     headers: { "Content-Type": "application/json", ...WIDGET_CONFIG_CORS },
-//   });
-// });
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "Content-Type": "application/json", ...WIDGET_CONFIG_CORS },
+  });
+});
 
 // Reuse the PUBLIC widget query so this endpoint and the iframe widget agree on
 // defaults/logo resolution. Cast the validated app_id to the workspace id type;
 // an invalid id surfaces as a thrown ArgumentValidationError (caught above).
-// async function getConfigSafe(
-//   ctx: Parameters<Parameters<typeof httpAction>[0]>[0],
-//   appId: string,
-// ) {
-//   return await ctx.runQuery(api.widget.getConfig, {
-//     workspaceId: appId as Id<"workspaces">,
-//   });
-// }
+async function getConfigSafe(
+  ctx: Parameters<Parameters<typeof httpAction>[0]>[0],
+  appId: string,
+) {
+  return await ctx.runQuery(api.widget.getConfig, {
+    workspaceId: appId as Id<"workspaces">,
+  });
+}
 
-// http.route({
-//   path: "/widget-config",
-//   method: "GET",
-//   handler: widgetConfig,
-// });
+http.route({
+  path: "/widget-config",
+  method: "GET",
+  handler: widgetConfig,
+});
 
 // CORS preflight for cross-origin GETs from embedding sites.
-// http.route({
-//   path: "/widget-config",
-//   method: "OPTIONS",
-//   handler: httpAction(async () => {
-//     return new Response(null, { status: 204, headers: WIDGET_CONFIG_CORS });
-//   }),
-// });
+http.route({
+  path: "/widget-config",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: WIDGET_CONFIG_CORS });
+  }),
+});
 
 export default http;

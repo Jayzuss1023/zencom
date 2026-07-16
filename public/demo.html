@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acme Co — (demo customer site)</title>
+    <style>
+      body {
+        margin: 0;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          sans-serif;
+        color: #1a1a18;
+      }
+      .hero {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 100px 24px;
+      }
+      h1 {
+        font-size: 44px;
+        margin: 0 0 12px;
+      }
+      p {
+        font-size: 18px;
+        line-height: 1.6;
+        color: #555;
+      }
+      .tag {
+        display: inline-block;
+        background: #eee;
+        color: #666;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 13px;
+        margin-bottom: 24px;
+      }
+      #warn {
+        display: none;
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 16px 24px;
+        color: #a32d2d;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="warn">
+      ⚠️ No <code>app_id</code> in the URL. Open this page from the dashboard
+      Setup tab, or add <code>?app_id=YOUR_WORKSPACE_ID</code>.
+    </div>
+    <div class="hero">
+      <span class="tag">This is a pretend customer website</span>
+      <h1>Acme Co.</h1>
+      <p>
+        Imagine this is some company that pasted your snippet into their site.
+        The chat bubble in the bottom-right is your embedded messenger — running
+        in an iframe, talking to your Convex backend, with replies coming from
+        your dashboard inbox.
+      </p>
+    </div>
+
+    <script>
+      (function () {
+        var p = new URLSearchParams(location.search);
+        var appId = p.get("app_id");
+        // host = where your Next.js app runs. Defaults to this page's origin, but
+        // pass ?host=http://localhost:3000 when serving this file from another origin
+        // to test TRUE cross-origin embedding.
+        var host = p.get("host") || location.origin;
+        if (!appId) {
+          document.getElementById("warn").style.display = "block";
+          return;
+        }
+
+        window.MyChatSettings = { app_id: appId };
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = host + "/loader.js";
+        document.body.appendChild(s);
+      })();
+    </script>
+  </body>
+</html>
