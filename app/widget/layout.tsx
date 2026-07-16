@@ -1,5 +1,6 @@
 import type { Viewport } from "next";
 import React from "react";
+import { WidgetProvider } from "./WidgetProvider";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -12,5 +13,5 @@ export default function WidgetLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <WidgetProvider>{children}</WidgetProvider>;
 }

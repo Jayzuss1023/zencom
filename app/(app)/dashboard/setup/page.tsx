@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { useConvex, useConvexAuth, useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import {
   ArrowUpRight,
   Check,
