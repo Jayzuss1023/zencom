@@ -40,7 +40,8 @@ export default function SetupPage() {
     );
   }
 
-  const snippet = `<src async src="${origin}/loader.js?app_id=${workspaceId}"></script>`;
+  const snippet = `<script async src="${origin}/loader.js?app_id=${workspaceId}"></script>`;
+
   const demoUrl = `${origin}/demo.html?app_id=${workspaceId}`;
 
   return (
