@@ -259,3 +259,5 @@ http.route({
   method: "POST",
   handler: clerkWebhook,
 });
+
+export default http;

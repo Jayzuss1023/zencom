@@ -144,7 +144,7 @@ export default function SetupPage() {
         {/* Step 3 - try it live */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
           <div className="flex items-start gap-4">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand-2 text-sm font-semibold text-white shadow-[0_8px_24px_-8px_var(--brand)]">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-2 text-sm font-semibold text-white shadow-[0_8px_24px_-8px_var(--brand)]">
               3
             </span>
             <div className="min-w-0 flex-1">

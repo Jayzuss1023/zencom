@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Retreiving widget
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -42,7 +44,11 @@ export async function GET(req: NextRequest) {
       { cache: "no-store" },
     );
     const body = await upstream.json();
+    console.log(body);
 
     return NextResponse.json(body, { status: 200, headers: CORS });
-  } catch (err) {}
+  } catch (err) {
+    console.error("[widget-config proxy] upstream fetch failed:", err);
+    return NextResponse.json(DEFAULT_BUBBLE, { status: 200, headers: CORS });
+  }
 }

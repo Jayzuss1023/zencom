@@ -39,7 +39,7 @@
     notificationSound: true,
   };
 
-  var open = false;
+  var open = false; // Controls when bubble is clicked to open iframe. Variable will control styling
   var userGestured = false; // autoplay gate - sound only after a real gesture.
   var unread = 0;
   var proactiveTimer = null;
@@ -109,6 +109,8 @@
       /* cosmetic only — keep defaults */
     });
 
+  // Controls styling for Widget. Button & IFrame
+  // Fires when page is loaded and when Bubble is clicked
   function paint() {
     var sideProp = cfg.position === "bottom-left" ? "left" : "right";
     var otherSide = cfg.position === "bottom-left" ? "right" : "left";

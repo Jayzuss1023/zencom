@@ -9,6 +9,7 @@
  */
 
 import type * as clerkWebhooks from "../clerkWebhooks.js";
+import type * as conversations from "../conversations.js";
 import type * as debug from "../debug.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -25,6 +26,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   clerkWebhooks: typeof clerkWebhooks;
+  conversations: typeof conversations;
   debug: typeof debug;
   http: typeof http;
   "lib/auth": typeof lib_auth;
