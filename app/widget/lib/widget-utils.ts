@@ -11,6 +11,6 @@ export function loadOrCreate(key: string) {
   if (!v) {
     localStorage.setItem(key, anonymous);
   }
-  console.log(v);
+
   return v;
 }

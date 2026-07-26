@@ -27,6 +27,12 @@ export default function WidgetPage() {
     setVisitorName(loadOrCreate(VISITOR_NAME_KEY));
   });
 
+  // Presence roster for the header (team avatars + online status)
+  const roster = useQuery(
+    api.presence.publicRoster,
+    appId ? { workspaceId: appId } : "skip",
+  );
+
   const conversations = useQuery(
     api.conversations.listForVisitor,
     appId && visitorId ? { workspaceId: appId, visitorId } : "skip",

@@ -12,10 +12,13 @@ import type * as clerkWebhooks from "../clerkWebhooks.js";
 import type * as conversations from "../conversations.js";
 import type * as debug from "../debug.js";
 import type * as http from "../http.js";
+import type * as inbox from "../inbox.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_plans from "../lib/plans.js";
 import type * as lib_ratelimit from "../lib/ratelimit.js";
+import type * as lib_utils from "../lib/utils.js";
 import type * as onboarding from "../onboarding.js";
+import type * as presence from "../presence.js";
 import type * as workspaces from "../workspaces.js";
 
 import type {
@@ -29,10 +32,13 @@ declare const fullApi: ApiFromModules<{
   conversations: typeof conversations;
   debug: typeof debug;
   http: typeof http;
+  inbox: typeof inbox;
   "lib/auth": typeof lib_auth;
   "lib/plans": typeof lib_plans;
   "lib/ratelimit": typeof lib_ratelimit;
+  "lib/utils": typeof lib_utils;
   onboarding: typeof onboarding;
+  presence: typeof presence;
   workspaces: typeof workspaces;
 }>;
 

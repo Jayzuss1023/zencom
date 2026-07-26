@@ -38,5 +38,26 @@ export function OrgGuard({ children }: { children: React.ReactNode }) {
     }
   }, [active, provisionWorkspace, router]);
 
+  // Auth still hydrating, or query in flight, or a redirect is imminent.
+  if (authLoading || active === undefined || !active.ok) {
+    return (
+      <div className="grid min-h-[calc(100svh-53px)] place-items-center p-6">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <span className="flex size-12 items-center justify-center rounded-2xl bg-brand/10 text-brand">
+            <Loader2 className="size-5 animate-spin" />
+          </span>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              Loading workspace
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Getting your dashboard ready…
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 }
