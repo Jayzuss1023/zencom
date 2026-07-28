@@ -17,6 +17,7 @@ import type * as lib_auth from "../lib/auth.js";
 import type * as lib_plans from "../lib/plans.js";
 import type * as lib_ratelimit from "../lib/ratelimit.js";
 import type * as lib_utils from "../lib/utils.js";
+import type * as messages from "../messages.js";
 import type * as onboarding from "../onboarding.js";
 import type * as presence from "../presence.js";
 import type * as workspaces from "../workspaces.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   "lib/plans": typeof lib_plans;
   "lib/ratelimit": typeof lib_ratelimit;
   "lib/utils": typeof lib_utils;
+  messages: typeof messages;
   onboarding: typeof onboarding;
   presence: typeof presence;
   workspaces: typeof workspaces;

@@ -7,10 +7,12 @@ import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { useQuery } from "convex/react";
 import { InboxIcon } from "lucide-react";
-import { div, span } from "motion/react-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { initials } from "./utils";
 import { relativeTime } from "@/convex/lib/utils";
+import { LastMessagePreview } from "./LastMessagePreview";
+import { ModeBadge } from "./ModeBadge";
+import { Badge } from "@/components/ui/badge";
 
 export type InboxFilter = "all" | "mine" | "unassigned" | "ai" | "human";
 
@@ -44,8 +46,8 @@ export function ConversationList({
   };
 
   return (
-    <div>
-      <div>
+    <div className="@container/inbox flex h-full flex-col">
+      <div className="border-b border-border p-2.5">
         <Tabs
           value={filter}
           onValueChange={(v) => onFilterChange(v as InboxFilter)}
@@ -118,7 +120,7 @@ export function ConversationList({
           <ul>
             {conversations.map((c) => {
               const isActive = c._id === activeId;
-              console.log(c);
+
               return (
                 <li key={c._id}>
                   <button
@@ -159,10 +161,57 @@ export function ConversationList({
                       ) : null}
                     </div>
 
-                    <div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "truncate text-sm",
+                            c.unread
+                              ? "font-semibold text-foreground"
+                              : "font-medium text-foreground/90",
+                          )}
+                        >
+                          {c.visitorName}
+                        </span>
+                        <span
+                          className={cn(
+                            "ml-auto shrink-0 text-[11px] tabular-nums",
+                            c.unread
+                              ? "font-medium text-brand"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          {relativeTime(c.lastMessageAt)}
+                        </span>
+                      </div>
+
+                      <LastMessagePreview
+                        conversationId={c._id}
+                        unread={c.unread}
+                      />
                       <div>
-                        <span>{c.visitorName}</span>
-                        <span>{relativeTime(c.lastMessageAt)}</span>
+                        <ModeBadge mode={c.mode} />
+                        {c.status === "closed" ? (
+                          <Badge
+                            variant="outline"
+                            className="h-5 gap-1 px-1.5 text-[10px] text-muted-foreground"
+                          >
+                            Closed
+                          </Badge>
+                        ) : null}
+                        {c.assigneeName ? (
+                          <span className="ml-auto flex items-center gap-1">
+                            <Avatar className="size-5 ring-2 ring-card">
+                              {c.assigneeAvatarUrl ? (
+                                <AvatarImage src={c.assigneeAvatarUrl} />
+                              ) : null}
+                            </Avatar>
+                          </span>
+                        ) : (
+                          <span className="ml-auto text-[10px] font-medium text-muted-foreground/70">
+                            Unassigned
+                          </span>
+                        )}
                       </div>
                     </div>
                   </button>

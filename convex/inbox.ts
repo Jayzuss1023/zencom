@@ -1,9 +1,8 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { requireOrgMember } from "./lib/auth";
-import { GenericQueryCtx } from "convex/server";
 import { Doc } from "./_generated/dataModel";
-import { enrich, isUnread } from "./lib/utils";
+import { enrich, isUnread, loadMember } from "./lib/utils";
 
 const conversationListItem = v.object({
   _id: v.id("conversations"),
@@ -17,8 +16,9 @@ const conversationListItem = v.object({
   assignedClerkUserId: v.optional(v.string()),
   assignedAt: v.optional(v.number()),
   assigneeName: v.optional(v.string()),
-  assigneeAvatarUlr: v.optional(v.string()),
+  assigneeAvatarUrl: v.optional(v.string()),
   lastVisitorMessageAt: v.optional(v.number()),
+  lastReadByAgentAt: v.optional(v.number()),
   unread: v.boolean(),
 });
 
@@ -131,5 +131,29 @@ export const listConversations = query({
     const memberByClerkId = new Map(members.map((m) => [m.clerkUserId, m]));
 
     return rows.map((c) => enrich(c, memberByClerkId));
+  },
+});
+
+export const getConvo = query({
+  args: { conversationId: v.id("conversations") },
+  returns: v.union(conversationListItem, v.null()),
+  handler: async (ctx, { conversationId }) => {
+    console.log("GETTING CONVOS");
+    const member = await requireOrgMember(ctx);
+    const convo = await ctx.db.get(conversationId);
+    if (!convo || convo.workspaceId !== member.workspace._id) {
+      return null;
+    }
+
+    console.log("CONVO", convo);
+
+    const assignee = convo.assignedClerkUserId
+      ? await loadMember(ctx, member.workspace._id, convo.assignedClerkUserId)
+      : null;
+
+    const memberByClerkId = new Map<string, Doc<"workspaceMembers">>();
+    if (assignee) memberByClerkId.set(assignee.clerkUserId, assignee);
+
+    return enrich(convo, memberByClerkId);
   },
 });

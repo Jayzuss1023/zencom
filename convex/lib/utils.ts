@@ -1,4 +1,5 @@
-import { Doc } from "@/_generated/dataModel";
+import { Doc, Id } from "@/_generated/dataModel";
+import { MutationCtx, QueryCtx } from "@/_generated/server";
 
 // All messages start off in AI mode (Admin has not yet been assigned)
 // If Visitor's last message time is greater than AI's read then mark as unread
@@ -24,8 +25,19 @@ export function relativeTime(ts: number) {
     month: "short",
     day: "numeric",
   });
+}
 
-  return true;
+export async function loadMember(
+  ctx: QueryCtx | MutationCtx,
+  workspaceId: Id<"workspaces">,
+  clerkUserId: string,
+) {
+  const members = await ctx.db
+    .query("workspaceMembers")
+    .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
+    .collect();
+
+  return members.find((m) => m.clerkUserId === clerkUserId) ?? null;
 }
 
 export function enrich(

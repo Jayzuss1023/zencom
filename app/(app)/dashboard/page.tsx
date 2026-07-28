@@ -7,6 +7,7 @@ import {
   InboxFilter,
 } from "./_components/inbox/ConversationList";
 import { Id } from "@/convex/_generated/dataModel";
+import { ConversationThread } from "./_components/inbox/ConversationThread";
 
 export default function InboxPage() {
   const [filter, setFilter] = useState<InboxFilter>("all");
@@ -37,7 +38,17 @@ export default function InboxPage() {
       </div>
 
       {/* Right pane - Thread */}
-      <div>{/* ConversationThread */}</div>
+      <div>
+        {activeId ? (
+          <ConversationThread key={activeId} conversationId={activeId} />
+        ) : (
+          <div>
+            <div>
+              <InboxIcon className="size-7" />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

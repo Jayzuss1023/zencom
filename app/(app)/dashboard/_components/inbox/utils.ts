@@ -1,3 +1,6 @@
+import { Id } from "@/convex/_generated/dataModel";
+import { MutationCtx, QueryCtx } from "@/convex/_generated/server";
+
 export function initials(name: string | undefined | null) {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/).filter(Boolean);
