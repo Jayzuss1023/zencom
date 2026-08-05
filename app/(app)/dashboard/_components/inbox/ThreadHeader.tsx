@@ -13,12 +13,6 @@ type Convo = NonNullable<
 >;
 
 export function ThreadHeader({ convo }: { convo: Convo }) {
-  // const [activeId, setActiveId] = useState<Id<"conversations"> | null>(null);
-  // const [typing, setTyping] = useState(false);
-  // const { ok } = usePresence({
-  //   activeConversationId: activeId,
-  //   typingConversationId: typing ? activeId : null,
-  // });
   return (
     <div>
       <div>

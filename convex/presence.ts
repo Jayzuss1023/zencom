@@ -57,7 +57,6 @@ export const heartbeat = mutation({
     // Attach per-user typing/active context for teammates (best-effort).
     if (data) {
       await presence.updateRoomUser(ctx, roomId, userId, data);
-      console.log("DATA", data);
     }
     return tokens;
   },
@@ -74,9 +73,17 @@ export const disconnect = mutation({
 
 export const list = query({
   args: { roomToken: v.string() },
-  returns: v.object({
-    ok: v.boolean(),
-  }),
+  returns: v.array(
+    v.object({
+      clerkUserId: v.string(),
+      online: v.boolean(),
+      lastDisconnected: v.number(),
+      name: v.optional(v.string()),
+      avatarUrl: v.optional(v.string()),
+      typingConversationId: v.optional(v.id("conversations")),
+      activeConversationId: v.optional(v.id("conversations")),
+    }),
+  ),
   handler: async (ctx, { roomToken }) => {
     const member = await requireOrgMember(ctx);
 
@@ -94,18 +101,31 @@ export const list = query({
       members.map((m) => [m.clerkUserId, m]),
     );
 
-    const prows = presenceRows.map((row) => {
-      const data = (row.data ?? {}) as {
-        typingConversationId?: string;
-        activeConversationId?: string;
-      };
-      const m = byId.get(row.userId);
-      console.log(m);
-    });
-    console.log(prows);
+    return await Promise.all(
+      presenceRows.map(async (row) => {
+        const data = (row.data ?? {}) as {
+          typingConversationId?: string;
+          activeConversationId?: string;
+        };
 
-    return {
-      ok: true,
-    };
+        const m = byId.get(row.userId);
+
+        //
+        const customAvatarUrl = m?.customAvatarStorageId
+          ? await ctx.storage.getUrl(m.customAvatarStorageId)
+          : null;
+        return {
+          clerkUserId: row.userId,
+          online: row.online,
+          lastDisconnected: row.lastDisconnected,
+          name: m?.name,
+          avatarUrl: customAvatarUrl ?? m?.imageUrl,
+          typingConversationId: data.typingConversationId as
+            Doc<"conversations">["_id"] | undefined,
+          activeConversationId: data.activeConversationId as
+            Doc<"conversations">["_id"] | undefined,
+        };
+      }),
+    );
   },
 });

@@ -7,6 +7,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 
+export type RosterEntry = {
+  clerkUserId: string;
+  online: boolean;
+  lastDisconnected: number;
+  name?: string;
+  avatarUrl?: string;
+  typingConversationId?: Id<"conversations">;
+  activeConversationId?: Id<"conversations">;
+};
+
 // Minted session id per tab. Survives re-renders unless refreshed
 function useSessionId() {
   const ref = useRef<string | null>(null);
@@ -26,7 +36,10 @@ export function usePresence(opts?: {
   enabled?: boolean;
   activeConversationId?: Id<"conversations"> | null;
   typingConversationId?: Id<"conversations"> | null;
-}) {
+}): {
+  roster: RosterEntry[];
+  onlineCount: number;
+} {
   const enabled = opts?.enabled ?? true;
   const sessionId = useSessionId();
   const heartbeat = useMutation(api.presence.heartbeat);
@@ -94,7 +107,11 @@ export function usePresence(opts?: {
     enabled && roomToken ? { roomToken } : "skip",
   );
 
+  const entries: RosterEntry[] = roster ?? [];
+  const onlineCount = entries.filter((r) => r.online).length;
+
   return {
-    ok: true,
+    roster: entries,
+    onlineCount,
   };
 }

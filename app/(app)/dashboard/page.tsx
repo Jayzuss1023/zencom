@@ -14,10 +14,11 @@ export default function InboxPage() {
   const [filter, setFilter] = useState<InboxFilter>("all");
   const [activeId, setActiveId] = useState<Id<"conversations"> | null>(null);
   const [typing, setTyping] = useState(false);
-  const { ok } = usePresence({
+  const { roster, onlineCount } = usePresence({
     activeConversationId: activeId,
     typingConversationId: typing ? activeId : null,
   });
+
   return (
     <div>
       <div>
