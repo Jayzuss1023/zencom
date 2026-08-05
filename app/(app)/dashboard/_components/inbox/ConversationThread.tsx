@@ -12,7 +12,6 @@ export function ConversationThread({
   conversationId: Id<"conversations">;
 }) {
   const convo = useQuery(api.inbox.getConvo, { conversationId });
-  console.log(convo);
 
   if (convo === undefined) {
     return (

@@ -138,14 +138,11 @@ export const getConvo = query({
   args: { conversationId: v.id("conversations") },
   returns: v.union(conversationListItem, v.null()),
   handler: async (ctx, { conversationId }) => {
-    console.log("GETTING CONVOS");
     const member = await requireOrgMember(ctx);
     const convo = await ctx.db.get(conversationId);
     if (!convo || convo.workspaceId !== member.workspace._id) {
       return null;
     }
-
-    console.log("CONVO", convo);
 
     const assignee = convo.assignedClerkUserId
       ? await loadMember(ctx, member.workspace._id, convo.assignedClerkUserId)
