@@ -34,6 +34,7 @@ import {
 import { cn } from "@/lib/utils";
 import { appRouterContext } from "next/dist/server/route-modules/app-route/shared-modules";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 type Convo = NonNullable<
   ReturnType<typeof useQuery<typeof api.inbox.getConvo>>
@@ -54,6 +55,18 @@ export function ThreadHeader({
   const returnToAi = useMutation(api.inbox.returnToAi);
 
   const isHuman = convo.mode === "human";
+
+  const run = async (fn: () => Promise<unknown>, msg: string) => {
+    setBusy(true);
+    try {
+      await fn();
+      toast.success(msg);
+    } catch (err) {
+      err instanceof Error ? err.message : "Something went wrong.";
+    } finally {
+      setBusy(false);
+    }
+  };
 
   // Who's actively viewin THIS conversationo (exludes me is fine - shows team)
   const viewers = roster.filter(
@@ -115,12 +128,27 @@ export function ThreadHeader({
       <div>
         {/* AI + Human toggle */}
         {isHuman ? (
-          <Button size="sm" variant="outline">
+          <Button
+            onClick={() =>
+              run(
+                () => returnToAi({ conversationId }),
+                "Handed back to AI assistant",
+              )
+            }
+            size="sm"
+            variant="outline"
+          >
             <Bot className="size-4" />
             Return to AI
           </Button>
         ) : (
           <Button
+            onClick={() =>
+              run(
+                () => takeOver({ conversationId }),
+                "You've taken over this conversation",
+              )
+            }
             size="sm"
             className="bg-linear-to-br from brand to-brand-2 text-white shadow-[0_8px_24px_-8px_var(--brand)] hover:opacity-95"
           >
