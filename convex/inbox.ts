@@ -1,7 +1,7 @@
-import { v } from "convex/values";
-import { query } from "./_generated/server";
-import { requireOrgMember } from "./lib/auth";
-import { Doc } from "./_generated/dataModel";
+import { ConvexError, v } from "convex/values";
+import { mutation, MutationCtx, query, QueryCtx } from "./_generated/server";
+import { OrgMemberContext, requireOrgMember } from "./lib/auth";
+import { Doc, Id } from "./_generated/dataModel";
 import { enrich, isUnread, loadMember } from "./lib/utils";
 
 const conversationListItem = v.object({
@@ -21,6 +21,42 @@ const conversationListItem = v.object({
   lastReadByAgentAt: v.optional(v.number()),
   unread: v.boolean(),
 });
+
+async function requireConversation(
+  ctx: QueryCtx | MutationCtx,
+  conversationId: Id<"conversations">,
+): Promise<{ member: OrgMemberContext; convo: Doc<"conversations"> }> {
+  const member = await requireOrgMember(ctx);
+  const convo = await ctx.db.get(conversationId);
+
+  if (!convo) {
+    throw new ConvexError({
+      code: "UNKNOWN_CONVERSATION",
+      message: "Conversation not found.",
+    });
+  }
+
+  if (convo.workspaceId !== member.workspace._id) {
+    throw new ConvexError({
+      code: "FORBIDDEN",
+      message: "Not authorized for this conversation.",
+    });
+  }
+
+  return { member, convo };
+}
+
+async function postSystem(
+  ctx: MutationCtx,
+  conversationId: Id<"conversations">,
+  body: string,
+): Promise<void> {
+  await ctx.db.insert("messages", {
+    conversationId,
+    author: "system",
+    body,
+  });
+}
 
 export const qeueCounts = query({
   args: {},
@@ -152,5 +188,117 @@ export const getConvo = query({
     if (assignee) memberByClerkId.set(assignee.clerkUserId, assignee);
 
     return enrich(convo, memberByClerkId);
+  },
+});
+
+export const listMembers = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      clerkUserId: v.string(),
+      name: v.string(),
+      avatarUrl: v.optional(v.string()),
+      role: v.union(v.literal("admin"), v.literal("support")),
+      isSelf: v.boolean(),
+    }),
+  ),
+  handler: async (ctx) => {
+    const member = await requireOrgMember(ctx);
+    const callerId = member.identity.subject;
+    const members = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_workspace", (q) =>
+        q.eq("workspaceId", member.workspace._id),
+      )
+      .collect();
+    const active = members
+      .filter((m) => m.status === "active")
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    return await Promise.all(
+      active.map(async (m) => {
+        const customAvatarUrl = m.customAvatarStorageId
+          ? await ctx.storage.getUrl(m.customAvatarStorageId)
+          : null;
+
+        return {
+          clerkUserId: m.clerkUserId,
+          name: m.name,
+          avatarUrl: customAvatarUrl ?? m.imageUrl,
+          role: m.role,
+          isSelf: m.clerkUserId === callerId,
+        };
+      }),
+    );
+  },
+});
+
+// TOGGLE FUNCTIONS
+export const returnToAi = mutation({
+  args: { conversationId: v.id("conversations") },
+  returns: v.null(),
+  handler: async (ctx, { conversationId }) => {
+    const { convo } = await requireConversation(ctx, conversationId);
+    if (convo.mode !== "human") {
+      // Already AI - Do nothing
+      return null;
+    }
+
+    // Prevent from excessive attempts
+    if (convo.pendingAgentJobId) {
+      try {
+        await ctx.scheduler.cancel(convo.pendingAgentJobId);
+      } catch {
+        // ignore
+      }
+    }
+
+    await ctx.db.patch(conversationId, {
+      mode: "ai",
+      pendingAgentJobId: undefined,
+    });
+    await postSystem(ctx, conversationId, "handed back to the AI assistant.");
+    return null;
+  },
+});
+
+export const takeOver = mutation({
+  args: { conversationId: v.id("conversations") },
+  returns: v.null(),
+  handler: async (ctx, { conversationId }) => {
+    const { member, convo } = await requireConversation(ctx, conversationId);
+    const callerId = member.identity.subject;
+
+    const alreadyHuman = convo.mode === "human";
+
+    // Cancel the pending, not yet started AI Job
+    if (convo.pendingAgentJobId) {
+      try {
+        await ctx.scheduler.cancel(convo.pendingAgentJobId);
+      } catch {
+        // ignore
+      }
+    }
+
+    const patch: Partial<Doc<"conversations">> = {
+      mode: "human",
+      agentRunEpoch: (convo.agentRunEpoch ?? 0) + 1,
+      pendingAgentJobId: undefined,
+      lastReadByAgentAt: Date.now(),
+    };
+
+    // Only self assign if no one owns it
+    if (!convo.assignedClerkUserId) {
+      patch.assignedClerkUserId = callerId;
+      patch.assignedAt = Date.now();
+    }
+
+    await ctx.db.patch(conversationId, patch);
+
+    if (!alreadyHuman) {
+      const name = member.identity.name;
+      await postSystem(ctx, conversationId, `${name} joined the conversation.`);
+    }
+    return null;
   },
 });

@@ -5,11 +5,16 @@ import { useQuery } from "convex/react";
 import { Bot } from "lucide-react";
 import { div } from "motion/react-client";
 import { ThreadHeader } from "./ThreadHeader";
+import { RosterEntry } from "./usePresence";
 
 export function ConversationThread({
   conversationId,
+  roster,
+  onTypingChange,
 }: {
   conversationId: Id<"conversations">;
+  roster: RosterEntry[];
+  onTypingChange: (typing: boolean) => void;
 }) {
   const convo = useQuery(api.inbox.getConvo, { conversationId });
 
@@ -54,7 +59,7 @@ export function ConversationThread({
 
   return (
     <div>
-      <ThreadHeader convo={convo} />
+      <ThreadHeader convo={convo} roster={roster} />
     </div>
   );
 }

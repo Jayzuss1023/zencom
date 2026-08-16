@@ -1,31 +1,243 @@
 "use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { initials } from "./utils";
 import { useState } from "react";
 import { Id } from "@/convex/_generated/dataModel";
-import { usePresence } from "./usePresence";
+import { RosterEntry, usePresence } from "./usePresence";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import {
+  Bot,
+  Check,
+  ChevronDown,
+  CircleCheck,
+  CircleDot,
+  User,
+  UserPlus,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { appRouterContext } from "next/dist/server/route-modules/app-route/shared-modules";
+import { Badge } from "@/components/ui/badge";
 
 type Convo = NonNullable<
   ReturnType<typeof useQuery<typeof api.inbox.getConvo>>
 >;
 
-export function ThreadHeader({ convo }: { convo: Convo }) {
+export function ThreadHeader({
+  convo,
+  roster,
+}: {
+  convo: Convo;
+  roster: RosterEntry[];
+}) {
+  const conversationId = convo._id;
+  const [busy, setBusy] = useState(false);
+
+  const members = useQuery(api.inbox.listMembers);
+  const takeOver = useMutation(api.inbox.takeOver);
+  const returnToAi = useMutation(api.inbox.returnToAi);
+
+  const isHuman = convo.mode === "human";
+
+  // Who's actively viewin THIS conversationo (exludes me is fine - shows team)
+  const viewers = roster.filter(
+    (r) => r.online && r.activeConversationId === conversationId,
+  );
+
   return (
-    <div>
-      <div>
-        <div>
-          <Avatar>
-            <AvatarFallback>{initials(convo.visitorName)}</AvatarFallback>
+    <div className="flex flex-wrap items-center gap-3 border-b border-border bg-card px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="relative shrink-0">
+          <Avatar className="size-10">
+            <AvatarFallback className="bg-muted text-xs font-medium text-muted-foreground">
+              {initials(convo.visitorName)}
+            </AvatarFallback>
           </Avatar>
+          <span
+            aria-hidden
+            className={cn(
+              "absolute -bottom-0.5 -right-0.5 size-3 rounded-full ring-2 ring-card",
+              viewers.length > 0 ? "bg-emerald-500" : "bg-zinc-300",
+            )}
+          />
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="truncate text-sm font-semibold tracking-tight">
+              {convo.visitorName}
+            </span>
+            {viewers.length > 0 ? (
+              <Tooltip>
+                <TooltipTrigger>
+                  <span className="flex -space-x-1.5">
+                    {viewers.slice(0, 3).map((v) => (
+                      <Avatar
+                        key={v.clerkUserId}
+                        className="ring-card size-5 ring-2"
+                      >
+                        {v.avatarUrl ? <AvatarImage src={v.avatarUrl} /> : null}
+                        <AvatarFallback className="bg-brand/10 text-[8px] font-medium text-brand">
+                          {initials(v.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                    ))}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {viewers.map((v) => v.name ?? "Teammate").join(", ")} viewing
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
+          </div>
           <div>
-            <div>
-              <span>{convo.visitorName}</span>
-            </div>
+            <span>{convo.status === "closed" ? "Closed" : "Open"}</span>
+            {viewers.length > 0 ? <span>{viewers.length} viewing</span> : null}
           </div>
         </div>
+      </div>
+
+      <div>
+        {/* AI + Human toggle */}
+        {isHuman ? (
+          <Button size="sm" variant="outline">
+            <Bot className="size-4" />
+            Return to AI
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            className="bg-linear-to-br from brand to-brand-2 text-white shadow-[0_8px_24px_-8px_var(--brand)] hover:opacity-95"
+          >
+            <User className="size-4" />
+            Take over
+          </Button>
+        )}
+
+        {/* Assignee dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button size="sm" variant="outline">
+                {convo.assigneeName ? (
+                  <>
+                    <Avatar className="size-4">
+                      {convo.assigneeAvatarUrl ? (
+                        <AvatarImage src={convo.assigneeAvatarUrl} />
+                      ) : null}
+                      <AvatarFallback className="text-[8px]">
+                        {initials(convo.assigneeName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="max-w-28 truncate">
+                      {convo.assigneeName}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="size-4" />
+                    Assign
+                  </>
+                )}
+                <ChevronDown className="size-3 opacity-60" />
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Assign to</DropdownMenuLabel>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            {members === undefined ? (
+              <DropdownMenuItem disabled>Loading...</DropdownMenuItem>
+            ) : (
+              members.map((m) => {
+                const selected = convo.assignedClerkUserId === m.clerkUserId;
+                return (
+                  <DropdownMenuItem key={m.clerkUserId}>
+                    <Avatar className="size-5">
+                      {m.avatarUrl ? <AvatarImage src={m.avatarUrl} /> : null}
+                      <AvatarFallback className="text-[9px]">
+                        {initials(m.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="truncate">
+                      {m.name}
+                      {m.isSelf ? " (me)" : ""}
+                      {selected ? (
+                        <Check className="ml-auto size-4 opacity-70" />
+                      ) : null}
+                    </span>
+                  </DropdownMenuItem>
+                );
+              })
+            )}
+            {convo.assignedClerkUserId ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Unassign</DropdownMenuItem>
+              </>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Status COntrol */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button size="sm" variant="outline">
+                {convo.status === "closed" ? (
+                  <CircleCheck className="size-4" />
+                ) : (
+                  <CircleDot className="size-4" />
+                )}
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <CircleDot className="size-4" />
+              Open
+              {convo.status !== "closed" ? (
+                <Check className="ml-auto size-4 opacity-70" />
+              ) : null}
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <CircleCheck className="size-4" />
+              Closed
+              {convo.status === "closed" ? (
+                <Check className="ml-auto size-4 opacity-70" />
+              ) : null}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Badge
+          className={cn(
+            "gap-1 font-medium",
+            isHuman
+              ? "border-emeral-500/20 bg-emerald-500/10 text-emerald-600"
+              : "border-brand/20 bg-brand/10 text-brand",
+          )}
+        >
+          {isHuman ? <User className="size-3" /> : <Bot className="size-3" />}
+          {isHuman ? "Human" : "AI"}
+        </Badge>
       </div>
     </div>
   );

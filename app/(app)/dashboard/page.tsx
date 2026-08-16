@@ -47,7 +47,12 @@ export default function InboxPage() {
       {/* Right pane - Thread */}
       <div>
         {activeId ? (
-          <ConversationThread key={activeId} conversationId={activeId} />
+          <ConversationThread
+            key={activeId}
+            conversationId={activeId}
+            roster={roster}
+            onTypingChange={setTyping}
+          />
         ) : (
           <div>
             <div>
