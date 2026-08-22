@@ -6,6 +6,7 @@ import { Bot } from "lucide-react";
 import { div } from "motion/react-client";
 import { ThreadHeader } from "./ThreadHeader";
 import { RosterEntry } from "./usePresence";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function ConversationThread({
   conversationId,
@@ -17,6 +18,8 @@ export function ConversationThread({
   onTypingChange: (typing: boolean) => void;
 }) {
   const convo = useQuery(api.inbox.getConvo, { conversationId });
+  const messages = useQuery(api.messages.list, { conversationId });
+  console.log(messages);
 
   if (convo === undefined) {
     return (
@@ -60,6 +63,10 @@ export function ConversationThread({
   return (
     <div>
       <ThreadHeader convo={convo} roster={roster} />
+
+      <ScrollArea>
+        <div></div>
+      </ScrollArea>
     </div>
   );
 }

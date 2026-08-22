@@ -170,6 +170,7 @@ export const listConversations = query({
   },
 });
 
+// Check for authorization then get convo
 export const getConvo = query({
   args: { conversationId: v.id("conversations") },
   returns: v.union(conversationListItem, v.null()),
@@ -324,6 +325,7 @@ export const assign = mutation({
       clerkUserId,
     );
 
+    // Skip. Do not run function
     if (!targetMember || targetMember.status !== "active") {
       throw new ConvexError({
         code: "INVALID_ASSIGNEE",
@@ -355,7 +357,7 @@ export const unassign = mutation({
     const { convo } = await requireConversation(ctx, conversationId);
 
     if (!convo.assignedClerkUserId) {
-      // Skip. User not yet assigned
+      // Skip processing. User not yet assigned
       return null;
     }
 

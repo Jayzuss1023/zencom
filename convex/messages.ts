@@ -1,6 +1,8 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
+import { requireOrgMember } from "./lib/auth";
 
+// List a conversations messages. Solely used for Dashboard and Widget
 export const list = query({
   args: {
     conversationId: v.id("conversations"),
@@ -33,8 +35,16 @@ export const list = query({
   ),
   handler: async (ctx, { conversationId, visitorId }) => {
     const convo = await ctx.db.get(conversationId);
-
     if (!convo) return [];
+
+    // Authorization. Skip function if unsuccessful
+    // Verify and allow only for either workspace or visitor from widget to have access
+    if (visitorId !== undefined) {
+      if (convo.visitorId !== visitorId) return [];
+    } else {
+      const { workspace } = await requireOrgMember(ctx);
+      if (convo.workspaceId !== workspace._id) return [];
+    }
 
     return await ctx.db
       .query("messages")
