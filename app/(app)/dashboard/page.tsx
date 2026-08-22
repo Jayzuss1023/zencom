@@ -7,7 +7,7 @@ import {
   InboxFilter,
 } from "./_components/inbox/ConversationList";
 import { Id } from "@/convex/_generated/dataModel";
-import { ConversationThread } from "./_components/inbox/ConversationThread";
+import { ConversationThread } from "./_components/ConversationThread/ConversationThread";
 import { usePresence } from "./_components/inbox/usePresence";
 
 export default function InboxPage() {

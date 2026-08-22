@@ -2,11 +2,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { Bot } from "lucide-react";
+import { Bot, Sparkles } from "lucide-react";
 import { div } from "motion/react-client";
-import { ThreadHeader } from "./ThreadHeader";
-import { RosterEntry } from "./usePresence";
+import { ThreadHeader } from "../inbox/ThreadHeader";
+import { RosterEntry } from "../inbox/usePresence";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import MessageRow from "./MessageRow";
 
 export function ConversationThread({
   conversationId,
@@ -19,7 +20,6 @@ export function ConversationThread({
 }) {
   const convo = useQuery(api.inbox.getConvo, { conversationId });
   const messages = useQuery(api.messages.list, { conversationId });
-  console.log(messages);
 
   if (convo === undefined) {
     return (
@@ -64,8 +64,30 @@ export function ConversationThread({
     <div>
       <ThreadHeader convo={convo} roster={roster} />
 
-      <ScrollArea>
-        <div></div>
+      <ScrollArea className="min-h-0 flex-1 bg-muted/30">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 py-6">
+          {messages === undefined ? (
+            <div className="space-y-4">
+              <Skeleton className="h-14 w-1/2 rounded-2xl" />
+              <Skeleton className="ml-auto h-14 w-1/2 rounded-2xl" />
+              <Skeleton className="h-14 w-2/5 rounded-2xl" />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center py-16 text-center">
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                <Sparkles className="size-5" />
+              </div>
+              <p className="mt-3 text-sm font-medium text-foreground">
+                No messages yet
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Start the conversation below.
+              </p>
+            </div>
+          ) : (
+            messages.map((m) => <MessageRow key={m._id} message={m} />)
+          )}
+        </div>
       </ScrollArea>
     </div>
   );
