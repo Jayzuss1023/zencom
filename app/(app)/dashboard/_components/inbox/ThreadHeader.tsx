@@ -53,6 +53,9 @@ export function ThreadHeader({
   const members = useQuery(api.inbox.listMembers);
   const takeOver = useMutation(api.inbox.takeOver);
   const returnToAi = useMutation(api.inbox.returnToAi);
+  const assign = useMutation(api.inbox.assign);
+  const unassign = useMutation(api.inbox.unassign);
+  const setStatus = useMutation(api.inbox.setStatus);
 
   const isHuman = convo.mode === "human";
 
@@ -129,28 +132,30 @@ export function ThreadHeader({
         {/* AI + Human toggle */}
         {isHuman ? (
           <Button
+            size="sm"
+            variant="outline"
+            disabled={busy}
             onClick={() =>
               run(
                 () => returnToAi({ conversationId }),
                 "Handed back to AI assistant",
               )
             }
-            size="sm"
-            variant="outline"
           >
             <Bot className="size-4" />
             Return to AI
           </Button>
         ) : (
           <Button
+            size="sm"
+            disabled={busy}
+            className="bg-linear-to-br from brand to-brand-2 text-white shadow-[0_8px_24px_-8px_var(--brand)] hover:opacity-95"
             onClick={() =>
               run(
                 () => takeOver({ conversationId }),
                 "You've taken over this conversation",
               )
             }
-            size="sm"
-            className="bg-linear-to-br from brand to-brand-2 text-white shadow-[0_8px_24px_-8px_var(--brand)] hover:opacity-95"
           >
             <User className="size-4" />
             Take over
@@ -161,7 +166,7 @@ export function ThreadHeader({
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" disabled={busy}>
                 {convo.assigneeName ? (
                   <>
                     <Avatar className="size-4">
@@ -197,7 +202,19 @@ export function ThreadHeader({
               members.map((m) => {
                 const selected = convo.assignedClerkUserId === m.clerkUserId;
                 return (
-                  <DropdownMenuItem key={m.clerkUserId}>
+                  <DropdownMenuItem
+                    key={m.clerkUserId}
+                    onClick={() =>
+                      run(
+                        () =>
+                          assign({
+                            conversationId,
+                            clerkUserId: m.clerkUserId,
+                          }),
+                        `Assigned to ${m.name}`,
+                      )
+                    }
+                  >
                     <Avatar className="size-5">
                       {m.avatarUrl ? <AvatarImage src={m.avatarUrl} /> : null}
                       <AvatarFallback className="text-[9px]">
@@ -218,17 +235,26 @@ export function ThreadHeader({
             {convo.assignedClerkUserId ? (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Unassign</DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    run(
+                      () => unassign({ conversationId }),
+                      "Returned to the queue",
+                    )
+                  }
+                >
+                  Unassign
+                </DropdownMenuItem>
               </>
             ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Status COntrol */}
+        {/* Status Control */}
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button size="sm" variant="outline">
+              <Button disabled={busy} size="sm" variant="outline">
                 {convo.status === "closed" ? (
                   <CircleCheck className="size-4" />
                 ) : (
@@ -238,14 +264,28 @@ export function ThreadHeader({
             }
           />
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                run(
+                  () => setStatus({ conversationId, status: "open" }),
+                  "This conversation is now open",
+                )
+              }
+            >
               <CircleDot className="size-4" />
               Open
               {convo.status !== "closed" ? (
                 <Check className="ml-auto size-4 opacity-70" />
               ) : null}
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                run(
+                  () => setStatus({ conversationId, status: "closed" }),
+                  "Conversation closed.",
+                )
+              }
+            >
               <CircleCheck className="size-4" />
               Closed
               {convo.status === "closed" ? (

@@ -233,7 +233,9 @@ export const listMembers = query({
   },
 });
 
-// TOGGLE FUNCTIONS
+// LOGGED IN USER TAKEOVER / RETURN TO AI TOGGLE FUNCS
+// Update the targeted conversations table
+// Update from AI to Human. "assignedClerkUser" is not updated. User is still assigned to conversation
 export const returnToAi = mutation({
   args: { conversationId: v.id("conversations") },
   returns: v.null(),
@@ -262,6 +264,9 @@ export const returnToAi = mutation({
   },
 });
 
+// Update the targeted conversations table
+// Logged in user takesover conversation. Update the "assignedClerkUser"
+// Update from AI to Human
 export const takeOver = mutation({
   args: { conversationId: v.id("conversations") },
   returns: v.null(),
@@ -299,6 +304,84 @@ export const takeOver = mutation({
       const name = member.identity.name;
       await postSystem(ctx, conversationId, `${name} joined the conversation.`);
     }
+    return null;
+  },
+});
+
+// ASSIGN/REASSIGN/UNASSIGN USER FROM CONVERSATION
+export const assign = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+    clerkUserId: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { conversationId, clerkUserId }) => {
+    const { member, convo } = await requireConversation(ctx, conversationId);
+
+    const targetMember = await loadMember(
+      ctx,
+      member.workspace._id,
+      clerkUserId,
+    );
+
+    if (!targetMember || targetMember.status !== "active") {
+      throw new ConvexError({
+        code: "INVALID_ASSIGNEE",
+        message: "Assignee is not an active member of this workspace.",
+      });
+    }
+
+    // Update ConversationID's table and send message to notify user new assignee
+    await ctx.db.patch(conversationId, {
+      assignedClerkUserId: clerkUserId,
+      assignedAt: Date.now(),
+    });
+    await postSystem(
+      ctx,
+      conversationId,
+      `Conversation assigned to ${targetMember.name}`,
+    );
+
+    return null;
+  },
+});
+
+export const unassign = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+  },
+  returns: v.null(),
+  handler: async (ctx, { conversationId }) => {
+    const { convo } = await requireConversation(ctx, conversationId);
+
+    if (!convo.assignedClerkUserId) {
+      // Skip. User not yet assigned
+      return null;
+    }
+
+    await ctx.db.patch(conversationId, {
+      assignedClerkUserId: undefined,
+      assignedAt: undefined,
+    });
+    await postSystem(ctx, conversationId, "Conversation returned to the queue");
+
+    return null;
+  },
+});
+
+// CONFIGURE STATUS OF CONVERSATION: OPEN/CLOSED
+export const setStatus = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+    status: v.union(v.literal("open"), v.literal("closed")),
+  },
+  returns: v.null(),
+  handler: async (ctx, { conversationId, status }) => {
+    await requireConversation(ctx, conversationId); // Called for validation
+    await ctx.db.patch(conversationId, {
+      status: status,
+    });
+    await postSystem(ctx, conversationId, `This conversation is now ${status}`);
     return null;
   },
 });
