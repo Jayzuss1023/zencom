@@ -3,11 +3,12 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { Bot, Sparkles } from "lucide-react";
-import { div } from "motion/react-client";
 import { ThreadHeader } from "../inbox/ThreadHeader";
 import { RosterEntry } from "../inbox/usePresence";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import MessageRow from "./MessageRow";
+import { useEffect, useRef } from "react";
+import Composer from "./Composer";
 
 export function ConversationThread({
   conversationId,
@@ -16,10 +17,16 @@ export function ConversationThread({
 }: {
   conversationId: Id<"conversations">;
   roster: RosterEntry[];
-  onTypingChange: (typing: boolean) => void;
+  onTypingChange: (isTyping: boolean) => void;
 }) {
   const convo = useQuery(api.inbox.getConvo, { conversationId });
   const messages = useQuery(api.messages.list, { conversationId });
+  const endRef = useRef<HTMLDivElement>(null);
+  const isAiMode = convo?.mode === "ai";
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages?.length]);
 
   if (convo === undefined) {
     return (
@@ -61,7 +68,7 @@ export function ConversationThread({
   }
 
   return (
-    <div>
+    <div className="flex h-full flex-col">
       <ThreadHeader convo={convo} roster={roster} />
 
       <ScrollArea className="min-h-0 flex-1 bg-muted/30">
@@ -87,8 +94,15 @@ export function ConversationThread({
           ) : (
             messages.map((m) => <MessageRow key={m._id} message={m} />)
           )}
+          <div ref={endRef} />
         </div>
       </ScrollArea>
+
+      <Composer
+        conversationId={conversationId}
+        isAiMode={isAiMode}
+        onTypingChange={onTypingChange}
+      />
     </div>
   );
 }

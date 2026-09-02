@@ -45,7 +45,11 @@ export default function InboxPage() {
       </div>
 
       {/* Right pane - Thread */}
-      <div>
+      <div
+        className={`bg-background min-h-0 min-w-0 ${
+          activeId ? "flex" : "hidden md:flex"
+        } flex-col`}
+      >
         {activeId ? (
           <ConversationThread
             key={activeId}
@@ -54,9 +58,18 @@ export default function InboxPage() {
             onTypingChange={setTyping}
           />
         ) : (
-          <div>
-            <div>
-              <InboxIcon className="size-7" />
+          <div className="grid h-full place-items-center p-8">
+            <div className="flex max-w-sm flex-col items-center text-center">
+              <div className="flex size-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                <InboxIcon className="size-7" />
+              </div>
+              <h2 className="mt-5 text-base font-medium text-foreground">
+                No conversation selected
+              </h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                Pick a conversation from the list to read the thread, reply, and
+                hand off between your AI agent and the team.
+              </p>
             </div>
           </div>
         )}

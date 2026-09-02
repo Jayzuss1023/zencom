@@ -1,5 +1,5 @@
-import { v } from "convex/values";
-import { query } from "./_generated/server";
+import { ConvexError, v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 import { requireOrgMember } from "./lib/auth";
 
 // List a conversations messages. Solely used for Dashboard and Widget
@@ -53,5 +53,41 @@ export const list = query({
       )
       .order("asc")
       .collect();
+  },
+});
+
+const MAX_BODY_LEN = 4000; // server-side bound on visitor free-text
+export const sendFromAgent = mutation({
+  args: { conversationId: v.id("conversations"), body: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { conversationId, body }) => {
+    const { workspace, identity } = await requireOrgMember(ctx);
+    const convo = await ctx.db.get(conversationId);
+
+    // Validation before allowing message post
+    if (!convo) throw new ConvexError({ code: "UKNOWN_CONVERSATION" });
+    if (convo.workspaceId !== workspace._id) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "Not authorized for this conversation.",
+      });
+    }
+
+    const trimmed = body.slice(0, MAX_BODY_LEN);
+    if (trimmed.length === 0) {
+      throw new ConvexError({ code: "EMPTY_BODY" });
+    }
+
+    await ctx.db.insert("messages", {
+      conversationId,
+      author: "agent",
+      body: trimmed,
+      isAi: false, // human
+      authorClerkUserId: identity.subject,
+    });
+
+    // Update time of last msg sent for UI dashboard
+    await ctx.db.patch(conversationId, { lastMessageAt: Date.now() });
+    return null;
   },
 });

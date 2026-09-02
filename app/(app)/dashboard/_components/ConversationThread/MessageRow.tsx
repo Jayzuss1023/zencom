@@ -53,7 +53,7 @@ export default function MessageRow({ message }: { message: Message }) {
           isAgent
             ? isAi
               ? "rounded-2xl rounded-br-md border border-brand/20 bg-brand/5 text-foreground"
-              : "rounded-2xl rounded-br-md bg-gradient-to-br from-brand to-brand-2 text-white shadow-[0_8px_24px_-12px_var(--brand)]"
+              : "rounded-2xl rounded-br-md bg-linear-to-br from-brand to-brand-2 text-white shadow-[0_8px_24px_-12px_var(--brand)]"
             : "rounded-2xl rounded-bl-md border border-border bg-card text-foreground",
         )}
       >
