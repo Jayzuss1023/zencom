@@ -189,7 +189,8 @@ export function ConversationList({
                         conversationId={c._id}
                         unread={c.unread}
                       />
-                      <div>
+
+                      <div className="mt-2 flex items-center gap-1.5">
                         <ModeBadge mode={c.mode} />
                         {c.status === "closed" ? (
                           <Badge
@@ -199,6 +200,7 @@ export function ConversationList({
                             Closed
                           </Badge>
                         ) : null}
+
                         {c.assigneeName ? (
                           <span className="ml-auto flex items-center gap-1">
                             <Avatar className="size-5 ring-2 ring-card">
