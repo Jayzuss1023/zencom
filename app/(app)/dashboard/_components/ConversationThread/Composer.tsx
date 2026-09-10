@@ -5,6 +5,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { Bot, Send } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function Composer({
   conversationId,
@@ -16,15 +17,29 @@ export default function Composer({
   onTypingChange: (isTyping: boolean) => void;
 }) {
   const [text, setText] = useState("");
-  const [sending, isSending] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const send = useMutation(api.messages.sendFromAgent);
   const takeOver = useMutation(api.inbox.takeOver);
 
   const submit = async () => {
     const body = text.trim();
-    const sendMsg = await send({ conversationId, body });
-    console.log("MESSAGE", sendMsg);
+    if (!body || sending) return;
+    setSending(true);
+    onTypingChange(false);
+    try {
+      // A human has made themselves present in the convo.
+      // Initialize takeover so AI doesn't response to guest's next response
+      if (isAiMode) {
+        await takeOver({ conversationId });
+      }
+      await send({ conversationId, body });
+      setText("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
