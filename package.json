@@ -17,6 +17,7 @@
     "@convex-dev/rate-limiter": "^0.3.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cn": "^0.3.0",
     "convex": "^1.45.0",
     "convex.config": "link:@convex-dev/presence/convex.config",
     "install": "^0.13.0",
