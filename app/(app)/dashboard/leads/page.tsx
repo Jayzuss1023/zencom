@@ -126,37 +126,6 @@ export default function LeadsPage() {
           </SelectContent>
         </Select>
       </div>
-
-      {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-border hover:bg-transparent">
-              <TableHead className="h-11 px-5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Name
-              </TableHead>
-              <TableHead className="h-11 px-5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Email
-              </TableHead>
-              <TableHead className="hidden h-11 px-5 text-xs font-medium uppercase tracking-wide text-muted-foreground md:table-cell">
-                Phone
-              </TableHead>
-              <TableHead className="hidden h-11 px-5 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:table-cell">
-                Source
-              </TableHead>
-              <TableHead className="hidden h-11 px-5 text-xs font-medium uppercase tracking-wide text-muted-foreground lg:table-cell">
-                Captured
-              </TableHead>
-              <TableHead className="h-11 px-5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Status
-              </TableHead>
-              <TableHead className="h-11 px-5 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Conversation
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-        </Table>
-      </div>
     </div>
   );
 }
