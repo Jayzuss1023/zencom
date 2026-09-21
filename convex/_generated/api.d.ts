@@ -20,6 +20,7 @@ import type * as lib_utils from "../lib/utils.js";
 import type * as messages from "../messages.js";
 import type * as onboarding from "../onboarding.js";
 import type * as presence from "../presence.js";
+import type * as widget from "../widget.js";
 import type * as workspaces from "../workspaces.js";
 
 import type {
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   onboarding: typeof onboarding;
   presence: typeof presence;
+  widget: typeof widget;
   workspaces: typeof workspaces;
 }>;
 
