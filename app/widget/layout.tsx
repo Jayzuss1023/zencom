@@ -1,15 +1,8 @@
 "use client";
 
-import type { Viewport } from "next";
 import React, { useEffect, useState } from "react";
 import { WidgetProvider } from "./WidgetProvider";
 import { Id } from "@/convex/_generated/dataModel";
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-};
 
 export default function WidgetLayout({
   children,
@@ -20,9 +13,7 @@ export default function WidgetLayout({
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("app_id");
-    if (!appId) {
-      setAppId(id as Id<"workspaces">);
-    }
+    if (id) setAppId(id as Id<"workspaces">);
   });
 
   return <WidgetProvider>{children}</WidgetProvider>;
