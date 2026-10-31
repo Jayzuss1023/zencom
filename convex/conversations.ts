@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import { query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
 export const listForVisitor = query({
   args: {
@@ -54,5 +54,40 @@ export const listForVisitor = query({
     const rows = await Promise.all(pullMessages);
 
     return rows.filter((r): r is NonNullable<typeof r> => r !== null);
+  },
+});
+
+// Find or create this visitor's MOST RECENT conversation
+// multi conversation safe - returns newest existing thread
+export const getOrCreateForVisitor = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    visitorId: v.string(),
+    visitorName: v.string(),
+  },
+  returns: v.id("conversations"),
+  handler: async (ctx, { workspaceId, visitorId, visitorName }) => {
+    const ws = await ctx.db.get(workspaceId);
+    if (!ws) throw new ConvexError({ code: "UNKOWN_WORKSPACE" });
+
+    const existing = await ctx.db
+      .query("conversations")
+      .withIndex("by_workspace_visitor", (q) =>
+        q.eq("workspaceId", workspaceId).eq("visitorId", visitorId),
+      )
+      .order("desc")
+      .first();
+
+    if (existing) return existing._id;
+    const now = Date.now();
+
+    return await ctx.db.insert("conversations", {
+      workspaceId,
+      visitorId,
+      visitorName,
+      lastMessageAt: now,
+      mode: "ai", // Default: AI answered fist
+      status: "open",
+    });
   },
 });
