@@ -8,10 +8,14 @@ import { useCallback, useEffect, useState } from "react";
 import { ChatTab } from "./components/ChatTab/ChatTab";
 
 export default function WidgetPage() {
+  // STATE MANAGEMENT
   const [appId, setAppId] = useState<Id<"workspaces"> | null>(null);
   const [conversationId, setConversationId] =
     useState<Id<"conversations"> | null>(null);
   const [visitorId, setVisitorId] = useState<string | null>(null);
+
+  // CONVEX
+  const createConversation = useMutation(api.conversations.createForVisitor);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

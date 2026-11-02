@@ -57,6 +57,46 @@ export const listForVisitor = query({
   },
 });
 
+// WIDGET: start a NEW conversation for a visitor
+export const createForVisitor = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    visitorId: v.string(),
+    visitorName: v.string(),
+  },
+  returns: v.id("conversations"),
+  handler: async (ctx, { workspaceId, visitorId, visitorName }) => {
+    const ws = await ctx.db.get(workspaceId);
+    if (!ws) throw new ConvexError({ code: "UNKOWN_WORKSPACE" });
+
+    const newest = await ctx.db
+      .query("conversations")
+      .withIndex("by_workspace_visitor", (q) =>
+        q.eq("workspaceId", workspaceId).eq("visitorId", visitorId),
+      )
+      .order("desc")
+      .first();
+
+    if (newest) {
+      const anyMsg = await ctx.db
+        .query("messages")
+        .withIndex("by_conversation", (q) => q.eq("conversationId", newest._id))
+        .first();
+      if (!anyMsg) return newest._id;
+    }
+
+    const now = Date.now();
+    return await ctx.db.insert("conversations", {
+      workspaceId,
+      visitorId,
+      visitorName,
+      lastMessageAt: now,
+      mode: "ai",
+      status: "open",
+    });
+  },
+});
+
 // Find or create this visitor's MOST RECENT conversation
 // multi conversation safe - returns newest existing thread
 export const getOrCreateForVisitor = mutation({
